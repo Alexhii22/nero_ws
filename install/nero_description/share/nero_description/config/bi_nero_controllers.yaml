@@ -1,0 +1,118 @@
+# ros2_control 控制器
+# launch 加载：joint_state_broadcaster + joint_trajectory_controller
+# Topic: /joint_trajectory_controller/joint_trajectory (trajectory_msgs/JointTrajectory)
+#
+# 工作原理：
+#   发布含目标位置 + 到达时间的 JointTrajectory 消息
+#   JTC 在控制周期内做插值（线性/三次/五次），每步输出平滑的中间位置
+#   既非瞬移，也无 PID 振荡问题
+
+controller_manager:
+  ros__parameters:
+    use_sim_time: true
+    update_rate: 200
+
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+joint_trajectory_controller:
+  ros__parameters:
+    use_sim_time: true
+    joints:
+      - left_joint1
+      - left_joint2
+      - left_joint3
+      - left_joint4
+      - left_joint5
+      - left_joint6
+      - left_joint7
+      - right_joint1
+      - right_joint2
+      - right_joint3
+      - right_joint4
+      - right_joint5
+      - right_joint6
+      - right_joint7
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    state_publish_rate: 30.0
+    action_monitor_rate: 30.0
+    allow_partial_joints_goal: false
+    open_loop_control: false
+    allow_integration_in_goal_trajectories: false
+    
+    # trajectory: 跟踪过程中允许的位姿误差，过小会触发 "State tolerances failed" 并进入 holding
+    # goal: 到达目标时的容差，小一点最终位姿更准（与 Isaac 一致）
+    constraints:
+      stopped_velocity_tolerance: 0.01
+      goal_time: 0.0
+      left_joint1:
+        trajectory: 0.06
+        goal: 0.005
+      left_joint2:
+        trajectory: 0.06
+        goal: 0.005
+      left_joint3:
+        trajectory: 0.06
+        goal: 0.005
+      left_joint4:
+        trajectory: 0.06
+        goal: 0.005
+      left_joint5:
+        trajectory: 0.06
+        goal: 0.005
+      left_joint6:
+        trajectory: 0.06
+        goal: 0.005
+      left_joint7:
+        trajectory: 0.06
+        goal: 0.005
+      right_joint1:
+        trajectory: 0.06
+        goal: 0.005
+      right_joint2:
+        trajectory: 0.06
+        goal: 0.005
+      right_joint3:
+        trajectory: 0.06
+        goal: 0.005
+      right_joint4:
+        trajectory: 0.06
+        goal: 0.005
+      right_joint5:
+        trajectory: 0.06
+        goal: 0.005
+      right_joint6:
+        trajectory: 0.06
+        goal: 0.005
+      right_joint7:
+        trajectory: 0.06
+        goal: 0.005
+
+joint_state_broadcaster:
+  ros__parameters:
+    use_sim_time: true
+    joints:
+      - left_joint1
+      - left_joint2
+      - left_joint3
+      - left_joint4
+      - left_joint5
+      - left_joint6
+      - left_joint7
+      - right_joint1
+      - right_joint2
+      - right_joint3
+      - right_joint4
+      - right_joint5
+      - right_joint6
+      - right_joint7
+    state_interfaces:
+      - position
+      - velocity

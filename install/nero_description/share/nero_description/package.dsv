@@ -1,0 +1,8 @@
+source;share/nero_description/hook/cmake_prefix_path.ps1
+source;share/nero_description/hook/cmake_prefix_path.dsv
+source;share/nero_description/hook/cmake_prefix_path.sh
+source;share/nero_description/local_setup.bash
+source;share/nero_description/local_setup.dsv
+source;share/nero_description/local_setup.ps1
+source;share/nero_description/local_setup.sh
+source;share/nero_description/local_setup.zsh

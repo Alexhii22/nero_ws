@@ -1,0 +1,585 @@
+<robot name="nero_description">
+    <link name="world"/>
+
+    <!-- Central Pillar -->
+    <link name="base_link">
+        <visual>
+            <origin xyz="0 0 0.435" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.08 0.08 0.87"/>
+            </geometry>
+            <material name="grey">
+                <color rgba="0.5 0.5 0.5 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.435" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.08 0.08 0.87"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0.435" rpy="0 0 0"/>
+            <mass value="5.0"/>
+            <inertia ixx="0.32" ixy="0" ixz="0" iyy="0.32" iyz="0" izz="0.01"/>
+        </inertial>
+    </link>
+
+    <joint name="world_to_base_link" type="fixed">
+        <parent link="world"/>
+        <child link="base_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- LEFT ARM -->
+    <link name="left_base_link">
+        <inertial>
+            <origin xyz="-0.009636 0.000168 0.044860" rpy="0 0 0"/>
+            <mass value="0.77"/>
+            <inertia ixx="0.0006669" ixy="0.0" ixz="0.0" iyy="0.00054501" iyz="0.0" izz="0.00051509"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/base_link.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/base_link.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="left_arm_mount" type="fixed">
+        <parent link="base_link"/>
+        <child link="left_base_link"/>
+        <origin xyz="0 -0.062 0.8" rpy="1.5708 0 0"/>
+    </joint>
+
+    <link name="left_link1">
+        <inertial>
+            <origin xyz="-0.00077 -0.00006 -0.00686" rpy="0 0 0"/>
+            <mass value="0.77"/>
+            <inertia ixx="0.0006669" ixy="0.0" ixz="0.0" iyy="0.00054501" iyz="0.0" izz="0.00051509"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link1.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link1.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="left_joint1" type="revolute">
+        <origin xyz="0 0 0.138" rpy="0 0 0"/>
+        <parent link="left_base_link"/>
+        <child link="left_link1"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.7" upper="2.7" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="left_link2">
+        <inertial>
+            <origin xyz="-0.00011 -0.06072 0.00148" rpy="0 0 0"/>
+            <mass value="0.49"/>
+            <inertia ixx="0.00053808" ixy="0.0" ixz="0.0" iyy="0.00029435" iyz="0.0" izz="0.00040266"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link2.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link2.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="left_joint2" type="revolute">
+        <origin xyz="0 0 0" rpy="1.5708 3.1415 0"/>
+        <parent link="left_link1"/>
+        <child link="left_link2"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-1.74" upper="1.74" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="left_link3">
+        <inertial>
+            <origin xyz="0.00014 0.00211 -0.04853" rpy="0 0 0"/>
+            <mass value="0.67"/>
+            <inertia ixx="0.00342528" ixy="0.0" ixz="0.0" iyy="0.0033924" iyz="0.0" izz="0.00026169"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link3.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link3.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="left_joint3" type="revolute">
+        <origin xyz="0 -0.31 0" rpy="-1.5708 0 3.1416"/>
+        <parent link="left_link2"/>
+        <child link="left_link3"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.75" upper="2.75" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="left_link4">
+        <inertial>
+            <origin xyz="-0.00013 -0.05482 0.00132" rpy="0 0 0"/>
+            <mass value="0.41"/>
+            <inertia ixx="0.00031331" ixy="0.0" ixz="0.0" iyy="0.00013204" iyz="0.0" izz="0.0002393"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link4.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link4.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="left_joint4" type="revolute">
+        <origin xyz="0 0 0" rpy="-1.5708 0 3.1416"/>
+        <parent link="left_link3"/>
+        <child link="left_link4"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-1.01" upper="2.14" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="left_link5">
+        <inertial>
+            <origin xyz="0.00303 0.00617 -0.11778" rpy="0 0 0"/>
+            <mass value="0.56"/>
+            <inertia ixx="0.0008249" ixy="0.0" ixz="0.0" iyy="0.00078548" iyz="0.0" izz="0.00021015"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link5.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link5.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="left_joint5" type="revolute">
+        <origin xyz="0 -0.27001 0" rpy="1.5708 -1.5708 0"/>
+        <parent link="left_link4"/>
+        <child link="left_link5"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.75" upper="2.75" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="left_link6">
+        <inertial>
+            <origin xyz="0.00014 -0.0027 -0.00025" rpy="0 0 0"/>
+            <mass value="0.31"/>
+            <inertia ixx="0.00008181" ixy="0.0" ixz="0.0" iyy="0.00007176" iyz="0.0" izz="0.00007906"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link6.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link6.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="left_joint6" type="revolute">
+        <origin xyz="0 0 0" rpy="1.5708 -1.5708 0"/>
+        <parent link="left_link5"/>
+        <child link="left_link6"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-0.73" upper="0.95" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="left_link7">
+        <inertial>
+            <origin xyz="-0.00014 -0.0001 -0.00275" rpy="0 0 0"/>
+            <mass value="0.05"/>
+            <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link7.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link7.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="left_joint7" type="revolute">
+        <origin xyz="0 -0.0235 0" rpy="1.5708 0 0"/>
+        <parent link="left_link6"/>
+        <child link="left_link7"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-1.57" upper="1.57" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="left_end_effector"/>
+    <joint name="left_end_effector_joint" type="fixed">
+        <origin xyz="0 0 -0.0235" rpy="0 0 0"/>
+        <parent link="left_link7"/>
+        <child link="left_end_effector"/>
+    </joint>
+
+
+    <!-- RIGHT ARM -->
+    <link name="right_base_link">
+        <inertial>
+            <origin xyz="-0.009636 0.000168 0.044860" rpy="0 0 0"/>
+            <mass value="0.77"/>
+            <inertia ixx="0.0006669" ixy="0.0" ixz="0.0" iyy="0.00054501" iyz="0.0" izz="0.00051509"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/base_link.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/base_link.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="right_arm_mount" type="fixed">
+        <parent link="base_link"/>
+        <child link="right_base_link"/>
+        <origin xyz="0 0.062 0.8" rpy="-1.5708 0 0"/>
+    </joint>
+
+    <link name="right_link1">
+        <inertial>
+            <origin xyz="-0.00077 -0.00006 -0.00686" rpy="0 0 0"/>
+            <mass value="0.77"/>
+            <inertia ixx="0.0006669" ixy="0.0" ixz="0.0" iyy="0.00054501" iyz="0.0" izz="0.00051509"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link1.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link1.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="right_joint1" type="revolute">
+        <origin xyz="0 0 0.138" rpy="0 0 0"/>
+        <parent link="right_base_link"/>
+        <child link="right_link1"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.7" upper="2.7" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="right_link2">
+        <inertial>
+            <origin xyz="-0.00011 -0.06072 0.00148" rpy="0 0 0"/>
+            <mass value="0.49"/>
+            <inertia ixx="0.00053808" ixy="0.0" ixz="0.0" iyy="0.00029435" iyz="0.0" izz="0.00040266"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link2.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link2.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="right_joint2" type="revolute">
+        <origin xyz="0 0 0" rpy="1.5708 3.1415 0"/>
+        <parent link="right_link1"/>
+        <child link="right_link2"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-1.74" upper="1.74" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="right_link3">
+        <inertial>
+            <origin xyz="0.00014 0.00211 -0.04853" rpy="0 0 0"/>
+            <mass value="0.67"/>
+            <inertia ixx="0.00342528" ixy="0.0" ixz="0.0" iyy="0.0033924" iyz="0.0" izz="0.00026169"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link3.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link3.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="right_joint3" type="revolute">
+        <origin xyz="0 -0.31 0" rpy="-1.5708 0 3.1416"/>
+        <parent link="right_link2"/>
+        <child link="right_link3"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.75" upper="2.75" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="right_link4">
+        <inertial>
+            <origin xyz="-0.00013 -0.05482 0.00132" rpy="0 0 0"/>
+            <mass value="0.41"/>
+            <inertia ixx="0.00031331" ixy="0.0" ixz="0.0" iyy="0.00013204" iyz="0.0" izz="0.0002393"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link4.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link4.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="right_joint4" type="revolute">
+        <origin xyz="0 0 0" rpy="-1.5708 0 3.1416"/>
+        <parent link="right_link3"/>
+        <child link="right_link4"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-1.01" upper="2.14" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="right_link5">
+        <inertial>
+            <origin xyz="0.00303 0.00617 -0.11778" rpy="0 0 0"/>
+            <mass value="0.56"/>
+            <inertia ixx="0.0008249" ixy="0.0" ixz="0.0" iyy="0.00078548" iyz="0.0" izz="0.00021015"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link5.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link5.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="right_joint5" type="revolute">
+        <origin xyz="0 -0.27001 0" rpy="1.5708 -1.5708 0"/>
+        <parent link="right_link4"/>
+        <child link="right_link5"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.75" upper="2.75" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="right_link6">
+        <inertial>
+            <origin xyz="0.00014 -0.0027 -0.00025" rpy="0 0 0"/>
+            <mass value="0.31"/>
+            <inertia ixx="0.00008181" ixy="0.0" ixz="0.0" iyy="0.00007176" iyz="0.0" izz="0.00007906"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link6.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link6.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="right_joint6" type="revolute">
+        <origin xyz="0 0 0" rpy="1.5708 -1.5708 0"/>
+        <parent link="right_link5"/>
+        <child link="right_link6"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-0.73" upper="0.95" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="right_link7">
+        <inertial>
+            <origin xyz="-0.00014 -0.0001 -0.00275" rpy="0 0 0"/>
+            <mass value="0.05"/>
+            <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/dae/link7.dae"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nero_description/meshes/Link7.STL"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="right_joint7" type="revolute">
+        <origin xyz="0 -0.0235 0" rpy="1.5708 0 0"/>
+        <parent link="right_link6"/>
+        <child link="right_link7"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-1.57" upper="1.57" effort="40" velocity="1.2"/>
+    </joint>
+
+    <link name="right_end_effector"/>
+    <joint name="right_end_effector_joint" type="fixed">
+        <origin xyz="0 0 -0.0235" rpy="0 0 0"/>
+        <parent link="right_link7"/>
+        <child link="right_end_effector"/>
+    </joint>
+
+    <!-- gazebo_ros2_control: 与 Isaac BI_NERO_HIGH_PD_CFG 一致 (effort 接口, stiffness=400, damping=180, effort_limit=40, disable_gravity) -->
+    <gazebo reference="base_link"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="left_base_link"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="left_link1"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="left_link2"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="left_link3"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="left_link4"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="left_link5"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="left_link6"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="left_link7"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="right_base_link"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="right_link1"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="right_link2"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="right_link3"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="right_link4"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="right_link5"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="right_link6"><turnGravityOff>true</turnGravityOff></gazebo>
+    <gazebo reference="right_link7"><turnGravityOff>true</turnGravityOff></gazebo>
+
+    <ros2_control name="GazeboSystem" type="system">
+        <hardware>
+            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+        <!-- position command_interface: 配合 joint_trajectory_controller (JTC) -->
+        <!-- JTC 接收位置目标 + 到达时间，内部做插值平滑，输出中间位置到 position 接口 -->
+        <joint name="left_joint1">
+            <command_interface name="position"><param name="min">-2.7</param><param name="max">2.7</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="left_joint2">
+            <command_interface name="position"><param name="min">-1.74</param><param name="max">1.74</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="left_joint3">
+            <command_interface name="position"><param name="min">-2.75</param><param name="max">2.75</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="left_joint4">
+            <command_interface name="position"><param name="min">-1.01</param><param name="max">2.14</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="left_joint5">
+            <command_interface name="position"><param name="min">-2.75</param><param name="max">2.75</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="left_joint6">
+            <command_interface name="position"><param name="min">-0.73</param><param name="max">0.95</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="left_joint7">
+            <command_interface name="position"><param name="min">-1.57</param><param name="max">1.57</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="right_joint1">
+            <command_interface name="position"><param name="min">-2.7</param><param name="max">2.7</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="right_joint2">
+            <command_interface name="position"><param name="min">-1.74</param><param name="max">1.74</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="right_joint3">
+            <command_interface name="position"><param name="min">-2.75</param><param name="max">2.75</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="right_joint4">
+            <command_interface name="position"><param name="min">-1.01</param><param name="max">2.14</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="right_joint5">
+            <command_interface name="position"><param name="min">-2.75</param><param name="max">2.75</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="right_joint6">
+            <command_interface name="position"><param name="min">-0.73</param><param name="max">0.95</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+        <joint name="right_joint7">
+            <command_interface name="position"><param name="min">-1.57</param><param name="max">1.57</param></command_interface>
+            <state_interface name="position"/><state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
+
+    <gazebo>
+        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+            <parameters>GAZEBO_ROS2_CONTROL_CONFIG_PATH</parameters>
+            <robot_param_node>robot_state_publisher</robot_param_node>
+        </plugin>
+    </gazebo>
+
+</robot>

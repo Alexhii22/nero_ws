@@ -1,0 +1,3 @@
+# For gazebo_ppo_play.py (PPO policy inference)
+torch>=2.0.0
+numpy>=1.20.0

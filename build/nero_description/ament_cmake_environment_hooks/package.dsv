@@ -1,0 +1,4 @@
+source;share/nero_description/local_setup.bash
+source;share/nero_description/local_setup.dsv
+source;share/nero_description/local_setup.sh
+source;share/nero_description/local_setup.zsh
