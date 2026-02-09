@@ -427,7 +427,7 @@ def main():
         help="--print-io 时每多少个控制步打印一次（默认 30，即约 1 秒一次@30Hz）"
     )
     parser.add_argument(
-        "--interp-alpha", type=float, default=0.08,
+        "--interp-alpha", type=float, default=0.075,
         help="当前动作→下一动作插值系数 (0,1]。默认 1.0 与 Isaac 一致（每步直接发目标）；<1 时平滑但最终位姿可能略异"
     )
     parser.add_argument(
