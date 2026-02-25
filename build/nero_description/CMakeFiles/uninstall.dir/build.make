@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/databeyond/agx_arm/nero_ws/src/robot_description/nero_description
+CMAKE_SOURCE_DIR = /home/alexlin1/nero_ws/src/robot_description/nero_description
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/databeyond/agx_arm/nero_ws/build/nero_description
+CMAKE_BINARY_DIR = /home/alexlin1/nero_ws/build/nero_description
 
 # Utility rule file for uninstall.
 
@@ -78,6 +78,6 @@ CMakeFiles/uninstall.dir/clean:
 .PHONY : CMakeFiles/uninstall.dir/clean
 
 CMakeFiles/uninstall.dir/depend:
-	cd /home/databeyond/agx_arm/nero_ws/build/nero_description && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/databeyond/agx_arm/nero_ws/src/robot_description/nero_description /home/databeyond/agx_arm/nero_ws/src/robot_description/nero_description /home/databeyond/agx_arm/nero_ws/build/nero_description /home/databeyond/agx_arm/nero_ws/build/nero_description /home/databeyond/agx_arm/nero_ws/build/nero_description/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/alexlin1/nero_ws/build/nero_description && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/alexlin1/nero_ws/src/robot_description/nero_description /home/alexlin1/nero_ws/src/robot_description/nero_description /home/alexlin1/nero_ws/build/nero_description /home/alexlin1/nero_ws/build/nero_description /home/alexlin1/nero_ws/build/nero_description/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/uninstall.dir/depend
 

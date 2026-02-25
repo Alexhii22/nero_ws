@@ -23,9 +23,10 @@ def generate_launch_description():
     )
 
 
-    # RViz 延迟 5s 启动，等 Gazebo 和 robot 就绪
+    # RViz 延迟 8s 启动，等 Gazebo、robot 和 TF 树完全就绪
+    # 增加延迟时间以避免时间倒退警告
     rviz_delayed = TimerAction(
-        period=5.0,
+        period=8.0,
         actions=[rviz_launch],
     )
 

@@ -19,6 +19,7 @@ try:
     from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
     from builtin_interfaces.msg import Duration
     from geometry_msgs.msg import PoseArray
+    from std_msgs.msg import Float32MultiArray
     from tf2_ros import Buffer, TransformListener, TransformException
 except ImportError as e:
     print(f"缺少依赖: {e}")
@@ -119,7 +120,7 @@ def _fmt(arr, fmt=".4f", max_show=7):
 class GazeboPpoPlayNode(Node):
     def __init__(self, policy_path: str, control_hz: float = 30.0, debug: bool = False, debug_interval: int = 30,
                  use_sim_time: bool = True, print_io: bool = False, print_io_interval: int = 30,
-                 interp_alpha: float = 0.1):
+                 interp_alpha: float = 0.075):
         super().__init__(
             "gazebo_ppo_play",
             parameter_overrides=[Parameter("use_sim_time", value=use_sim_time)],
@@ -141,6 +142,10 @@ class GazeboPpoPlayNode(Node):
         )
         # 调试用
         self._pub_policy_cmd = self.create_publisher(JointState, "policy_cmd", 10)#创建关节发布者，最多缓存十条
+        # 发布解码后的关节位置（14维，DEFAULT + SCALE*action，裁剪限位前，便于与实际控制命令对比）
+        self._pub_raw_action = self.create_publisher(Float32MultiArray, "policy_raw_action", 10)
+        # 发布实际关节状态（14维，从/joint_states获取，便于对比策略输出与实际执行）
+        self._pub_actual_joints = self.create_publisher(Float32MultiArray, "actual_joint_states", 10)
         # 上一拍指令关节位置（用于 obs 的 joint_prev_pos）。Isaac 中 joint_prev_pos = default + processed_action；
         # 第一拍尚未执行过 action，processed_action=0，故 上一拍指令 = default。
         self._left_prev_pos = DEFAULT_LEFT.copy()
@@ -269,14 +274,23 @@ class GazeboPpoPlayNode(Node):
         return np.clip(pos_7, JOINT_LIMITS_LOW, JOINT_LIMITS_HIGH)
 
     def _publish_joint_positions(self, left_pos: np.ndarray, right_pos: np.ndarray):
-        """发布关节轨迹到 joint_trajectory_controller，JTC 在一个控制周期内平滑插值到目标。"""
+        """发布关节轨迹到 joint_trajectory_controller，JTC 在指定时间内平滑插值到目标。
+        轨迹时间根据 interp_alpha 调整：alpha 越小，目标变化越平滑，可以给控制器更多时间。
+        """
         positions = np.concatenate([left_pos, right_pos]).tolist()
         msg = JointTrajectory()
         msg.joint_names = list(JOINT_NAMES)
         point = JointTrajectoryPoint()
         point.positions = [float(x) for x in positions]
-        # 到达时间 = 1 个控制周期，JTC 在这段时间内平滑插值
-        duration_sec = self._control_dt
+        # 轨迹时间：根据 interp_alpha 调整
+        # alpha 越小，目标变化越平滑，可以给控制器更多时间到达目标
+        # 最小为 1 个控制周期，最大为 2 个控制周期（给控制器更多缓冲时间）
+        if self.interp_alpha < 0.3:
+            # 小 alpha：目标变化平滑，给控制器更多时间
+            duration_sec = self._control_dt * 1.5
+        else:
+            # 大 alpha：目标变化快，但至少给 1 个控制周期
+            duration_sec = self._control_dt
         sec = int(duration_sec)
         nanosec = int((duration_sec - sec) * 1e9)
         point.time_from_start = Duration(sec=sec, nanosec=nanosec)
@@ -357,11 +371,18 @@ class GazeboPpoPlayNode(Node):
             action = self._policy(obs_tensor).cpu().numpy()
 
         action_flat = np.asarray(action[0] if action.ndim == 2 else action, dtype=np.float32)
+        
         # 与 Isaac 一致：policy 输出通常被约束在 [-1,1]（如 tanh），解码前裁剪
         action_flat = np.clip(action_flat, -1.0, 1.0)
 
         # 与 Isaac JointPositionAction 一致：target = default + scale*action；joint_prev_pos = 该 target（用于下一拍 obs）
         left_decoded, right_decoded = self._decode_action_to_joint_positions(action_flat)
+        
+        # 发布解码后的关节位置（14维，DEFAULT + SCALE*action，裁剪限位前，便于与实际控制命令对比）
+        decoded_joint_pos = np.concatenate([left_decoded, right_decoded])
+        raw_action_msg = Float32MultiArray()
+        raw_action_msg.data = decoded_joint_pos.tolist()
+        self._pub_raw_action.publish(raw_action_msg)
         left_target = self._clip_arm_to_limits(left_decoded)
         right_target = self._clip_arm_to_limits(right_decoded)
         self._left_prev_pos = left_target.copy()
@@ -427,8 +448,8 @@ def main():
         help="--print-io 时每多少个控制步打印一次（默认 30，即约 1 秒一次@30Hz）"
     )
     parser.add_argument(
-        "--interp-alpha", type=float, default=0.075,
-        help="当前动作→下一动作插值系数 (0,1]。默认 1.0 与 Isaac 一致（每步直接发目标）；<1 时平滑但最终位姿可能略异"
+        "--interp-alpha", type=float, default=0.05,
+        help="当前动作→下一动作插值系数 (0,1]。默认 0.1 平衡响应速度与控制器跟踪能力；1.0 与 Isaac 一致但可能导致容差错误；建议 0.05-0.2"
     )
     parser.add_argument(
         "--use-sim-time", action="store_true", default=True,

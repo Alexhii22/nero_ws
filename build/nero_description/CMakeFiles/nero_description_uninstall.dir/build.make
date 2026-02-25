@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/databeyond/agx_arm/nero_ws/src/robot_description/nero_description
+CMAKE_SOURCE_DIR = /home/alexlin1/nero_ws/src/robot_description/nero_description
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/databeyond/agx_arm/nero_ws/build/nero_description
+CMAKE_BINARY_DIR = /home/alexlin1/nero_ws/build/nero_description
 
 # Utility rule file for nero_description_uninstall.
 
@@ -67,7 +67,7 @@ include CMakeFiles/nero_description_uninstall.dir/compiler_depend.make
 include CMakeFiles/nero_description_uninstall.dir/progress.make
 
 CMakeFiles/nero_description_uninstall:
-	/usr/bin/cmake -P /home/databeyond/agx_arm/nero_ws/build/nero_description/ament_cmake_uninstall_target/ament_cmake_uninstall_target.cmake
+	/usr/bin/cmake -P /home/alexlin1/nero_ws/build/nero_description/ament_cmake_uninstall_target/ament_cmake_uninstall_target.cmake
 
 nero_description_uninstall: CMakeFiles/nero_description_uninstall
 nero_description_uninstall: CMakeFiles/nero_description_uninstall.dir/build.make
@@ -82,6 +82,6 @@ CMakeFiles/nero_description_uninstall.dir/clean:
 .PHONY : CMakeFiles/nero_description_uninstall.dir/clean
 
 CMakeFiles/nero_description_uninstall.dir/depend:
-	cd /home/databeyond/agx_arm/nero_ws/build/nero_description && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/databeyond/agx_arm/nero_ws/src/robot_description/nero_description /home/databeyond/agx_arm/nero_ws/src/robot_description/nero_description /home/databeyond/agx_arm/nero_ws/build/nero_description /home/databeyond/agx_arm/nero_ws/build/nero_description /home/databeyond/agx_arm/nero_ws/build/nero_description/CMakeFiles/nero_description_uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/alexlin1/nero_ws/build/nero_description && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/alexlin1/nero_ws/src/robot_description/nero_description /home/alexlin1/nero_ws/src/robot_description/nero_description /home/alexlin1/nero_ws/build/nero_description /home/alexlin1/nero_ws/build/nero_description /home/alexlin1/nero_ws/build/nero_description/CMakeFiles/nero_description_uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/nero_description_uninstall.dir/depend
 

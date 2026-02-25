@@ -275,10 +275,11 @@ def main():
     parser = argparse.ArgumentParser(
         description="发布左右臂随机目标位姿 Marker（RViz 可视化，无重力，每 6 秒更新）"
     )
-    parser.add_argument("--interval", type=float, default=6.0, help="随机更新间隔（秒）")
+    parser.add_argument("--interval", type=float, default=7.0, help="随机更新间隔（秒）")
     parser.add_argument("--seed", type=int, default=None, help="随机种子")
     parser.add_argument("--ee-hz", type=float, default=10.0, help="末端 link7 关键点发布频率 (Hz)")
-    args = parser.parse_args()
+    # 使用 parse_known_args() 忽略 ROS 2 标准参数（--ros-args, -r, --params-file 等）
+    args, unknown = parser.parse_known_args()
 
     rclpy.init()
     node = ReachTargetMarkerNode(interval=args.interval, seed=args.seed, ee_publish_hz=args.ee_hz)

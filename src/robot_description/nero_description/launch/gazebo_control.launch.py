@@ -11,7 +11,7 @@ import tempfile
 
 from ament_index_python.packages import get_package_share_path
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, RegisterEventHandler
+from launch.actions import ExecuteProcess, RegisterEventHandler, TimerAction
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 
@@ -66,11 +66,19 @@ def generate_launch_description():
     )
 
     # robot_state_publisher 通过 parameters_file 加载参数，避免 --param 传 robot_description 导致插件解析失败
+    # 需要先启动来发布 /robot_description topic（供 spawn_entity 使用）
+    # 然后会自动订阅 /joint_states（当 joint_state_broadcaster 启动后）来发布 TF
     node_robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         parameters=[params_file],
         output="screen",
+    )
+    
+    # 延迟 robot_state_publisher 启动 2 秒，等待 Gazebo 时钟发布
+    robot_state_publisher_delayed = TimerAction(
+        period=2.0,
+        actions=[node_robot_state_publisher],
     )
 
     # 在 Gazebo 中生成机器人（URDF 中含 gazebo_ros2_control 插件）
@@ -104,6 +112,9 @@ def generate_launch_description():
         output="screen",
     )
 
+    # 确保启动顺序：robot_state_publisher -> spawn_entity -> load_joint_state_broadcaster -> load_joint_trajectory_controller
+    # robot_state_publisher 先启动发布 /robot_description（供 spawn_entity 使用）
+    # 当 joint_state_broadcaster 启动后，robot_state_publisher 会自动订阅 /joint_states 并发布 TF
     close_evt1 = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=spawn_entity_cmd,
@@ -130,7 +141,7 @@ def generate_launch_description():
     ld.add_action(close_evt1)
     ld.add_action(close_evt2)
     ld.add_action(start_gazebo_cmd)
-    ld.add_action(node_robot_state_publisher)
-    ld.add_action(spawn_entity_cmd)
+    ld.add_action(robot_state_publisher_delayed)  # 先启动，发布 /robot_description topic
+    ld.add_action(spawn_entity_cmd)  # 从 /robot_description topic 读取 URDF
     ld.add_action(node_reach_targets)
     return ld

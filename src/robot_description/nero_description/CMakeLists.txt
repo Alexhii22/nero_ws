@@ -54,6 +54,21 @@ install(
   DESTINATION lib/${PROJECT_NAME}
   RENAME gazebo_ppo_play
 )
+install(
+  PROGRAMS scripts/gain_real_joint_positions.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME gain_real_joint_positions
+)
+install(
+  PROGRAMS scripts/publish_real_joint_positions.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME publish_real_joint_positions
+)
+install(
+  PROGRAMS scripts/sim_ppo_play.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME sim_ppo_play
+)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

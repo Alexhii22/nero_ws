@@ -10,7 +10,7 @@
 controller_manager:
   ros__parameters:
     use_sim_time: true
-    update_rate: 200
+    update_rate: 30  # 与 policy 输出频率对齐（30Hz），确保轨迹跟踪频率一致
 
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
@@ -47,52 +47,61 @@ joint_trajectory_controller:
     open_loop_control: false
     allow_integration_in_goal_trajectories: false
     
-    # trajectory: 跟踪过程中允许的位姿误差，过小会触发 "State tolerances failed" 并进入 holding
-    # goal: 到达目标时的容差，小一点最终位姿更准（与 Isaac 一致）
+    # trajectory: 轨迹跟踪过程中的位置容差（rad）
+    #   这是控制器在跟踪轨迹时检查的容差，不是到达目标时的容差
+    #   即使目标位置相同，控制器内部会生成一条轨迹，在跟踪过程中检查实际位置是否在期望轨迹的容差范围内
+    #   误差来源：
+    #     - 控制器内部插值算法（线性/三次/五次）的近似误差
+    #     - 控制器更新频率（30Hz）和轨迹时间的离散化误差
+    #     - 浮点数精度误差
+    #     - 控制器内部状态检查机制的延迟
+    #   容差需要足够大以容忍这些误差，建议 0.05-0.1 rad（≈3-6°）
+    #   注意：即使从零点发布到零点，控制器在跟踪轨迹时仍可能有误差
+    # goal: 到达目标时的位置容差（rad），小一点最终位姿更准（与 Isaac 一致）
     constraints:
       stopped_velocity_tolerance: 0.01
       goal_time: 0.0
       left_joint1:
-        trajectory: 0.06
+        trajectory: 0.1  # 轨迹跟踪容差，需足够大以容忍插值算法和离散化误差（0.05 rad ≈ 2.9°）
         goal: 0.005
       left_joint2:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       left_joint3:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       left_joint4:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       left_joint5:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       left_joint6:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       left_joint7:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       right_joint1:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       right_joint2:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       right_joint3:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       right_joint4:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       right_joint5:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       right_joint6:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
       right_joint7:
-        trajectory: 0.06
+        trajectory: 0.1
         goal: 0.005
 
 joint_state_broadcaster:

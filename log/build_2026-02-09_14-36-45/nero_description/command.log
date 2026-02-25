@@ -1,0 +1,6 @@
+Invoking command in '/home/alexlin1/nero_ws/build/nero_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/alexlin1/nero_ws/src/robot_description/nero_description -DCMAKE_INSTALL_PREFIX=/home/alexlin1/nero_ws/install/nero_description
+Invoked command in '/home/alexlin1/nero_ws/build/nero_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/alexlin1/nero_ws/src/robot_description/nero_description -DCMAKE_INSTALL_PREFIX=/home/alexlin1/nero_ws/install/nero_description
+Invoking command in '/home/alexlin1/nero_ws/build/nero_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/alexlin1/nero_ws/build/nero_description -- -j8 -l8
+Invoked command in '/home/alexlin1/nero_ws/build/nero_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/alexlin1/nero_ws/build/nero_description -- -j8 -l8
+Invoking command in '/home/alexlin1/nero_ws/build/nero_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/alexlin1/nero_ws/build/nero_description
+Invoked command in '/home/alexlin1/nero_ws/build/nero_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/alexlin1/nero_ws/build/nero_description
