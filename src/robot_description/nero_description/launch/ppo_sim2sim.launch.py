@@ -1,6 +1,7 @@
 # Copyright 2025. PPO sim2sim 集成启动：Gazebo + 控制 + 目标发布 + RViz
 # 用法: ros2 launch nero_description ppo_sim2sim.launch.py
-# 启动 policy: ros2 run nero_description gazebo_ppo_play -p /path/to/policy.pt
+# 单 PPO: ros2 run nero_description gazebo_ppo_play -p /path/to/policy.pt
+# MAPPO:  ros2 run nero_description gazebo_mappo_play -e /path/to/exported_mappo_gazebo
 
 from ament_index_python.packages import get_package_share_path
 

@@ -2,10 +2,13 @@
 # launch 加载：joint_state_broadcaster + joint_trajectory_controller
 # Topic: /joint_trajectory_controller/joint_trajectory (trajectory_msgs/JointTrajectory)
 #
-# 工作原理：
-#   发布含目标位置 + 到达时间的 JointTrajectory 消息
-#   JTC 在控制周期内做插值（线性/三次/五次），每步输出平滑的中间位置
-#   既非瞬移，也无 PID 振荡问题
+# 轨迹跟踪控制器的平滑处理（JointTrajectoryController）：
+#   1. 插值方式：默认 interpolation_method: "splines"
+#      - 只给位置时：线性插值（当前位 -> 目标位，在 time_from_start 内平滑过渡）
+#      - 给位置+速度：三次样条；给位置+速度+加速度：五次样条
+#   2. 控制周期：state_publish_rate / controller_manager.update_rate（本配置 30Hz）内按插值采样，写入 position 接口
+#   3. 轨迹时间：由发布端 JointTrajectory.points[].time_from_start 决定（gazebo_mappo_play_skrl 里约 1~1.5 个控制周期）
+# 调平滑：可改 interpolation_method（"splines" 平滑 / "none" 不插值直接跟目标）、constraints.trajectory、或发布端 time_from_start
 
 controller_manager:
   ros__parameters:
@@ -46,7 +49,9 @@ joint_trajectory_controller:
     allow_partial_joints_goal: false
     open_loop_control: false
     allow_integration_in_goal_trajectories: false
-    
+    # 轨迹插值：splines（默认，在 time_from_start 内平滑插值到目标）| none（不插值，尽快跟目标）
+    interpolation_method: "splines"
+
     # trajectory: 轨迹跟踪过程中的位置容差（rad）
     #   这是控制器在跟踪轨迹时检查的容差，不是到达目标时的容差
     #   即使目标位置相同，控制器内部会生成一条轨迹，在跟踪过程中检查实际位置是否在期望轨迹的容差范围内

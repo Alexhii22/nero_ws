@@ -40,7 +40,7 @@ except ImportError as e:
 # Action 解码: joint_pos = default + scale*action；joint_pos_env_cfg 中 scale=0.6。
 DEFAULT_LEFT = np.array([1.6, 1.2, 0.52, 0.52, -0.6, 0.0, 0.0], dtype=np.float32)
 DEFAULT_RIGHT = np.array([-1.6, 1.2, -0.52, 0.52, 0.6, 0.0, 0.0], dtype=np.float32)#零点设置
-SCALE = 0.6#scale设置 动作解码需与isaaclab动作限幅一致
+SCALE = 0.5#scale设置 动作解码需与isaaclab动作限幅一致
 KEYPOINT_SCALE = 0.25#关键点误差计算与spawn_reach_targets一致
 
 JOINT_NAMES = [

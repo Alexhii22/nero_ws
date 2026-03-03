@@ -55,6 +55,11 @@ install(
   RENAME gazebo_ppo_play
 )
 install(
+  PROGRAMS scripts/gazebo_mappo_play_skrl.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME gazebo_mappo_play_skrl
+)
+install(
   PROGRAMS scripts/gain_real_joint_positions.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME gain_real_joint_positions

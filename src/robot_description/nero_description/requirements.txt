@@ -1,3 +1,7 @@
 # For gazebo_ppo_play.py (PPO policy inference)
 torch>=2.0.0
 numpy>=1.20.0
+
+# For gazebo_mappo_play_skrl.py (direct SKRL MAPPO in ROS, no export)
+gymnasium>=0.29.0
+skrl>=1.4.0

@@ -35,8 +35,8 @@ JTC_TOPIC = "/joint_trajectory_controller/joint_trajectory"
 VEL_CLIP = 3.0  # rad/s
 
 DEFAULT_POSITIONS = [
-     1.6, 1.2, 0.52, 0.52, -0.6, 0.0, 0.0,
-     -1.6, 1.2, -0.52, 0.52, 0.6, 0.0, 0.0,
+     1.0, 1.0, -1.0, 1.50, 1.0, 0.0, 0.0,
+     -1.0, 1.0, 1.0, 1.50, -1.0, 0.0, 0.0,
 ]
 
 # 关节限位 (rad)，与 gazebo_ppo_play 一致

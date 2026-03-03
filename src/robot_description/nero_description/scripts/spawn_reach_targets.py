@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2025. 在 world 系下生成左右臂随机目标位姿，用 RViz Marker 可视化（无重力，纯虚拟）。
-# 区间与 reach_env_cfg.py 一致。发布目标位姿、关键点世界坐标，与 PPO obs_target_keypoints_world 一致。
+# Copyright 2025. 在 world 系下发布左右臂**移动目标**位姿，与 reach_env_cfg.py 的 DynamicSweepPoseCommand 逻辑一致。
+# 用 RViz Marker 可视化；发布 /reach_targets (PoseArray) 与目标关键点，与 PPO obs_target_keypoints_world 一致。
 # 用法: ros2 run nero_description spawn_reach_targets
 # 需启动 Gazebo 仿真 + RViz（Add -> MarkerArray -> Topic: /reach_target_markers, Fixed Frame: world）
 
@@ -20,45 +20,48 @@ except ImportError as e:
     print(f"需要 ROS2 环境: {e}")
     sys.exit(1)
 
-EE_FRAME = "world"  # TF 父坐标系，left_link7/right_link7 将变换到此系
-
-# 与 observations.py obs_target_keypoints_world 一致：keypoint_scale=0.25, add_negative_axes=False → 3 点 (X+,Y+,Z+)
+EE_FRAME = "world"
 KEYPOINT_SCALE = 0.25
 
-# 右臂目标位姿区间 (reach_env_cfg.py 80-85)
-RIGHT_RANGES = {
-    "pos_x": (0.15, 0.3),
-    "pos_y": (0.15, 0.25),
-    "pos_z": (0.3, 0.4),
+# ---------- 与 reach_env_cfg.py DynamicSweepPoseCommandCfg 完全一致 ----------
+# Left (左臂): Y 从 -0.05 向 -0.4 匀速移动，到达后切到 rest，等待 0.5~2s 后新目标在 start_pos_y 随机 X 出现
+LEFT_CFG = {
+    "pos_x_min": -0.4,
+    "pos_x_max": -0.1,
+    "start_pos_y": -0.05,
+    "end_pos_y": -0.4,
+    "fixed_pos_z": 0.40,
+    "velocity": 0.20,
+    "rest_pos_x": -0.45,
+    "rest_pos_y": -0.05,
+    "rest_pos_z": 0.55,
+    "wait_time_min": 1.0,
+    "wait_time_max": 3.0,
     "roll": (-math.pi / 9, math.pi / 9),
-    "pitch": (math.pi+3 * math.pi / 2 + math.pi/2, math.pi + 3 * math.pi / 2 + math.pi/2),
+    "pitch": (3 * math.pi / 2 - math.pi / 2, 3 * math.pi / 2 - math.pi / 2),  # (pi, pi)
+    "yaw": (math.pi + 9.5 * math.pi / 10, 2 * math.pi),
+}
+
+# Right (右臂): Y 从 0.4 向 0.05 匀速移动（代码里统一用 y -= velocity*dt）
+RIGHT_CFG = {
+    "pos_x_min": -0.4,
+    "pos_x_max": -0.1,
+    "start_pos_y": 0.5,
+    "end_pos_y": 0.05,
+    "fixed_pos_z": 0.40,
+    "velocity": 0.20,
+    "rest_pos_x": -0.45,
+    "rest_pos_y": 0.30,
+    "rest_pos_z": 0.55,
+    "wait_time_min": 1.0,
+    "wait_time_max": 3.0,
+    "roll": (-math.pi / 9, math.pi / 9),
+    "pitch": (math.pi + 3 * math.pi / 2 - math.pi / 2, math.pi + 3 * math.pi / 2 - math.pi / 2),  # (2*pi, 2*pi)
     "yaw": (9.6 * math.pi / 10, 10.4 * math.pi / 10),
 }
 
-# 左臂目标位姿区间 (reach_env_cfg.py 95-100)
-LEFT_RANGES = {
-    "pos_x": (0.15, 0.3),
-    "pos_y": (-0.25, -0.15),
-    "pos_z": (0.3, 0.4),
-    "roll": (-math.pi / 9, math.pi / 9),
-    "pitch": (3 * math.pi / 2+math.pi/2, 3 * math.pi / 2+math.pi/2),
-    "yaw": (math.pi+9.5 * math.pi / 10, 2*math.pi),
-}
-
-
-def sample_pose(ranges):
-    """在区间内随机采样位姿 (x,y,z, roll,pitch,yaw)"""
-    pos_x = random.uniform(*ranges["pos_x"])
-    pos_y = random.uniform(*ranges["pos_y"])
-    pos_z = random.uniform(*ranges["pos_z"])
-    roll = random.uniform(*ranges["roll"])
-    pitch = ranges["pitch"][0]
-    yaw = random.uniform(*ranges["yaw"])
-    return (pos_x, pos_y, pos_z, roll, pitch, yaw)
-
 
 def rpy_to_quaternion(roll, pitch, yaw):
-    """欧拉角 (roll, pitch, yaw) 转四元数 (x, y, z, w)"""
     cy, sy = math.cos(yaw * 0.5), math.sin(yaw * 0.5)
     cp, sp = math.cos(pitch * 0.5), math.sin(pitch * 0.5)
     cr, sr = math.cos(roll * 0.5), math.sin(roll * 0.5)
@@ -70,7 +73,6 @@ def rpy_to_quaternion(roll, pitch, yaw):
 
 
 def quat_rotate_vector(q, v):
-    """四元数 q (x,y,z,w) 旋转向量 v，与 observations/rewards 一致"""
     qx, qy, qz, qw = q[0], q[1], q[2], q[3]
     vx, vy, vz = v[0], v[1], v[2]
     return (
@@ -80,12 +82,8 @@ def quat_rotate_vector(q, v):
     )
 
 
-def get_target_keypoints_world(pos, quat, keypoint_scale=KEYPOINT_SCALE, add_negative_axes=False):
-    """目标关键点世界坐标，与 observations.obs_target_keypoints_world 一致。
-    pos: (x,y,z), quat: (x,y,z,w)。返回 3 点 9D 或 6 点 18D。"""
+def get_target_keypoints_world(pos, quat, keypoint_scale=KEYPOINT_SCALE):
     corners = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-    if add_negative_axes:
-        corners += [[-1, 0, 0], [0, -1, 0], [0, 0, -1]]
     kps = []
     for c in corners:
         offset = [c[0] * keypoint_scale, c[1] * keypoint_scale, c[2] * keypoint_scale]
@@ -94,32 +92,72 @@ def get_target_keypoints_world(pos, quat, keypoint_scale=KEYPOINT_SCALE, add_neg
     return kps
 
 
-class ReachTargetMarkerNode(Node):
-    """发布左右臂目标位姿与左右 link7 关键点的 RViz Marker"""
+class MovingTargetState:
+    """单臂移动目标状态机，与 DynamicSweepPoseCommand 一致。"""
 
-    def __init__(self, interval=6.0, seed=None, ee_publish_hz=10.0):
+    def __init__(self, cfg, is_left=True):
+        self.cfg = cfg
+        self.is_left = is_left
+        self.pos_x = 0.0
+        self.pos_y = 0.0
+        self.pos_z = cfg["fixed_pos_z"]
+        self.roll = random.uniform(*cfg["roll"])
+        self.pitch = cfg["pitch"][0]
+        self.yaw = random.uniform(*cfg["yaw"])
+        self.is_moving = True
+        self.wait_timer = 0.0
+        self._reset_target()
+
+    def _reset_target(self):
+        self.pos_x = random.uniform(self.cfg["pos_x_min"], self.cfg["pos_x_max"])
+        self.pos_y = self.cfg["start_pos_y"]
+        self.pos_z = self.cfg["fixed_pos_z"]
+        self.roll = random.uniform(*self.cfg["roll"])
+        self.pitch = self.cfg["pitch"][0]
+        self.yaw = random.uniform(*self.cfg["yaw"])
+        self.is_moving = True
+
+    def _set_rest_target(self):
+        self.pos_x = self.cfg["rest_pos_x"]
+        self.pos_y = self.cfg["rest_pos_y"]
+        self.pos_z = self.cfg["rest_pos_z"]
+        self.is_moving = False
+        self.wait_timer = random.uniform(self.cfg["wait_time_min"], self.cfg["wait_time_max"])
+
+    def step(self, dt):
+        if self.is_moving:
+            self.pos_y -= self.cfg["velocity"] * dt
+            if self.pos_y <= self.cfg["end_pos_y"]:
+                self._set_rest_target()
+        else:
+            self.wait_timer -= dt
+            if self.wait_timer <= 0.0:
+                self._reset_target()
+
+    def pose(self):
+        return (self.pos_x, self.pos_y, self.pos_z, self.roll, self.pitch, self.yaw)
+
+
+class ReachTargetMarkerNode(Node):
+    """发布左右臂移动目标位姿（与 reach_env_cfg DynamicSweepPoseCommand 一致）及 link7 关键点。"""
+
+    def __init__(self, update_hz=50.0, seed=None):
         super().__init__("spawn_reach_targets")
         if seed is not None:
             random.seed(seed)
 
-        self.marker_pub = self.create_publisher(
-            MarkerArray, "/reach_target_markers", 10
-        )
-        self.pose_pub = self.create_publisher(
-            PoseArray, "/reach_targets", 10
-        )
+        self.marker_pub = self.create_publisher(MarkerArray, "/reach_target_markers", 10)
+        self.pose_pub = self.create_publisher(PoseArray, "/reach_targets", 10)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.interval = interval
-        self._target_markers = []  # 目标+目标关键点 markers，供 _publish_ee 合并
-        self.timer = self.create_timer(interval, self._update)
-        self.ee_timer = self.create_timer(1.0 / ee_publish_hz, self._publish_ee_keypoints)
+        self._left_state = MovingTargetState(LEFT_CFG, is_left=True)
+        self._right_state = MovingTargetState(RIGHT_CFG, is_left=False)
+        self._dt = 1.0 / update_hz
+        self._update_timer = self.create_timer(self._dt, self._update_moving_targets)
+        self._log_count = 0
 
-        self._update()
-
-    def _make_marker(self, marker_id, pose, color, label):
-        """创建单个球体 Marker"""
+    def _make_marker(self, marker_id, pose, color, label, lifetime_sec=1):
         m = Marker()
         m.header.frame_id = "world"
         m.header.stamp = self.get_clock().now().to_msg()
@@ -127,20 +165,17 @@ class ReachTargetMarkerNode(Node):
         m.id = marker_id
         m.type = Marker.SPHERE
         m.action = Marker.ADD
-        m.pose.position.x = pose[0]
-        m.pose.position.y = pose[1]
-        m.pose.position.z = pose[2]
+        m.pose.position.x, m.pose.position.y, m.pose.position.z = pose[0], pose[1], pose[2]
         q = rpy_to_quaternion(pose[3], pose[4], pose[5])
         m.pose.orientation.x, m.pose.orientation.y, m.pose.orientation.z, m.pose.orientation.w = q
         m.scale.x = m.scale.y = m.scale.z = 0.04
         m.color.r, m.color.g, m.color.b, m.color.a = color
-        m.lifetime.sec = int(self.interval) + 1
+        m.lifetime.sec = max(1, int(lifetime_sec))
         m.lifetime.nanosec = 0
         m.text = label
         return m
 
-    def _make_keypoint_marker(self, marker_id, pos_xyz, color, label, ns="reach_target_keypoints", lifetime_sec=2):
-        """创建关键点小球 Marker（世界坐标）"""
+    def _make_keypoint_marker(self, marker_id, pos_xyz, color, label, ns="reach_target_keypoints", lifetime_sec=1):
         m = Marker()
         m.header.frame_id = "world"
         m.header.stamp = self.get_clock().now().to_msg()
@@ -152,13 +187,12 @@ class ReachTargetMarkerNode(Node):
         m.pose.orientation.x, m.pose.orientation.y, m.pose.orientation.z, m.pose.orientation.w = 0.0, 0.0, 0.0, 1.0
         m.scale.x = m.scale.y = m.scale.z = 0.02
         m.color.r, m.color.g, m.color.b, m.color.a = color
-        m.lifetime.sec = int(lifetime_sec)
+        m.lifetime.sec = max(1, int(lifetime_sec))
         m.lifetime.nanosec = 0
         m.text = label
         return m
 
     def _get_link_pose(self, child_frame):
-        """从 TF 获取 link 在 EE_FRAME 下的位姿 pos(x,y,z), quat(x,y,z,w)"""
         try:
             t = self.tf_buffer.lookup_transform(
                 EE_FRAME, child_frame, rclpy.time.Time(),
@@ -170,90 +204,43 @@ class ReachTargetMarkerNode(Node):
         except (TransformException, Exception):
             return None, None
 
-    def _publish_ee_keypoints(self):
-        """定时发布左右 link7 关键点，与目标 markers 合并后发布"""
-        left_pos, left_quat = self._get_link_pose("left_link7")
-        right_pos, right_quat = self._get_link_pose("right_link7")
+    def _update_moving_targets(self):
+        self._left_state.step(self._dt)
+        self._right_state.step(self._dt)
 
-        arr = MarkerArray()
-        arr.markers.extend(self._target_markers)
-
-        if left_pos is not None and right_pos is not None:
-            left_kps = get_target_keypoints_world(left_pos, left_quat)
-            right_kps = get_target_keypoints_world(right_pos, right_quat)
-            for i, kp in enumerate(right_kps):
-                arr.markers.append(self._make_keypoint_marker(
-                    i, kp, (1.0, 0.3, 0.0, 0.9), f"right_ee_kp[{i}]",
-                    ns="ee_keypoints", lifetime_sec=1
-                ))
-            for i, kp in enumerate(left_kps):
-                arr.markers.append(self._make_keypoint_marker(
-                    10 + i, kp, (0.3, 0.6, 1.0, 0.9), f"left_ee_kp[{i}]",
-                    ns="ee_keypoints", lifetime_sec=1
-                ))
-
-        if arr.markers:
-            self.marker_pub.publish(arr)
-
-    def _update(self):
-        right_pose = sample_pose(RIGHT_RANGES)
-        left_pose = sample_pose(LEFT_RANGES)
-
+        right_pose = self._right_state.pose()
+        left_pose = self._left_state.pose()
         right_pos = (right_pose[0], right_pose[1], right_pose[2])
         right_quat = rpy_to_quaternion(right_pose[3], right_pose[4], right_pose[5])
         left_pos = (left_pose[0], left_pose[1], left_pose[2])
         left_quat = rpy_to_quaternion(left_pose[3], left_pose[4], left_pose[5])
-
         right_kps = get_target_keypoints_world(right_pos, right_quat)
         left_kps = get_target_keypoints_world(left_pos, left_quat)
 
-        # 终端打印目标关键点世界坐标
-        print("\n" + "=" * 60)
-        print("目标关键点世界坐标 (world, 与 obs_target_keypoints_world 一致)")
-        print(f"右臂目标 pos=({right_pos[0]:.4f}, {right_pos[1]:.4f}, {right_pos[2]:.4f})")
-        print(f"  X+ kp: ({right_kps[0][0]:.4f}, {right_kps[0][1]:.4f}, {right_kps[0][2]:.4f})")
-        print(f"  Y+ kp: ({right_kps[1][0]:.4f}, {right_kps[1][1]:.4f}, {right_kps[1][2]:.4f})")
-        print(f"  Z+ kp: ({right_kps[2][0]:.4f}, {right_kps[2][1]:.4f}, {right_kps[2][2]:.4f})")
-        print(f"右臂 9D: [{', '.join(f'{x:.4f}' for p in right_kps for x in p)}]")
-        print(f"左臂目标 pos=({left_pos[0]:.4f}, {left_pos[1]:.4f}, {left_pos[2]:.4f})")
-        print(f"  X+ kp: ({left_kps[0][0]:.4f}, {left_kps[0][1]:.4f}, {left_kps[0][2]:.4f})")
-        print(f"  Y+ kp: ({left_kps[1][0]:.4f}, {left_kps[1][1]:.4f}, {left_kps[1][2]:.4f})")
-        print(f"  Z+ kp: ({left_kps[2][0]:.4f}, {left_kps[2][1]:.4f}, {left_kps[2][2]:.4f})")
-        print(f"左臂 9D: [{', '.join(f'{x:.4f}' for p in left_kps for x in p)}]")
+        # Markers: 目标球 + 关键点
+        lifetime = 2
+        arr = MarkerArray()
+        arr.markers.append(self._make_marker(0, right_pose, (1.0, 0.0, 0.0, 0.9), "right_target", lifetime))
+        arr.markers.append(self._make_marker(1, left_pose, (0.0, 0.0, 1.0, 0.9), "left_target", lifetime))
+        for i, kp in enumerate(right_kps):
+            arr.markers.append(self._make_keypoint_marker(i, kp, (1.0, 0.5, 0.0, 0.95), f"right_tgt_kp[{i}]", lifetime_sec=lifetime))
+        for i, kp in enumerate(left_kps):
+            arr.markers.append(self._make_keypoint_marker(10 + i, kp, (0.0, 0.8, 1.0, 0.95), f"left_tgt_kp[{i}]", lifetime_sec=lifetime))
 
-        # 若 TF 可用，打印 link7 关键点
+        # 末端 link7 关键点（若 TF 可用）
         left_ee_pos, left_ee_quat = self._get_link_pose("left_link7")
         right_ee_pos, right_ee_quat = self._get_link_pose("right_link7")
         if left_ee_pos is not None and right_ee_pos is not None:
             left_ee_kps = get_target_keypoints_world(left_ee_pos, left_ee_quat)
             right_ee_kps = get_target_keypoints_world(right_ee_pos, right_ee_quat)
-            print("---")
-            print("末端 link7 关键点世界坐标 (与 obs_ee_keypoints_world 一致)")
-            print(f"右 link7 pos=({right_ee_pos[0]:.4f}, {right_ee_pos[1]:.4f}, {right_ee_pos[2]:.4f})")
-            print(f"  9D: [{', '.join(f'{x:.4f}' for p in right_ee_kps for x in p)}]")
-            print(f"左 link7 pos=({left_ee_pos[0]:.4f}, {left_ee_pos[1]:.4f}, {left_ee_pos[2]:.4f})")
-            print(f"  9D: [{', '.join(f'{x:.4f}' for p in left_ee_kps for x in p)}]")
-        else:
-            print("--- (link7 TF 暂不可用，待 Gazebo+robot_state_publisher 发布)")
-        print("=" * 60 + "\n")
+            for i, kp in enumerate(right_ee_kps):
+                arr.markers.append(self._make_keypoint_marker(i, kp, (1.0, 0.3, 0.0, 0.9), f"right_ee_kp[{i}]", ns="ee_keypoints", lifetime_sec=1))
+            for i, kp in enumerate(left_ee_kps):
+                arr.markers.append(self._make_keypoint_marker(10 + i, kp, (0.3, 0.6, 1.0, 0.9), f"left_ee_kp[{i}]", ns="ee_keypoints", lifetime_sec=1))
 
-        # 存储目标 markers，供 _publish_ee_keypoints 合并发布
-        self._target_markers = []
-        self._target_markers.append(self._make_marker(0, right_pose, (1.0, 0.0, 0.0, 0.9), "right_target"))
-        self._target_markers.append(self._make_marker(1, left_pose, (0.0, 0.0, 1.0, 0.9), "left_target"))
-        for i, kp in enumerate(right_kps):
-            self._target_markers.append(self._make_keypoint_marker(
-                i, kp, (1.0, 0.5, 0.0, 0.95), f"right_tgt_kp[{i}]",
-                lifetime_sec=int(self.interval) + 1
-            ))
-        for i, kp in enumerate(left_kps):
-            self._target_markers.append(self._make_keypoint_marker(
-                10 + i, kp, (0.0, 0.8, 1.0, 0.95), f"left_tgt_kp[{i}]",
-                lifetime_sec=int(self.interval) + 1
-            ))
-        self._publish_ee_keypoints()
+        self.marker_pub.publish(arr)
 
-        # PoseArray
+        # PoseArray: [right, left] 与 Isaac 命令顺序一致
         pa = PoseArray()
         pa.header.frame_id = "world"
         pa.header.stamp = self.get_clock().now().to_msg()
@@ -265,33 +252,31 @@ class ReachTargetMarkerNode(Node):
             pa.poses.append(p)
         self.pose_pub.publish(pa)
 
-        self.get_logger().info(
-            f"已更新目标位姿: 右臂 ({right_pose[0]:.2f},{right_pose[1]:.2f},{right_pose[2]:.2f}) "
-            f"左臂 ({left_pose[0]:.2f},{left_pose[1]:.2f},{left_pose[2]:.2f})"
-        )
-
+        self._log_count += 1
+        if self._log_count % 100 == 0:
+            self.get_logger().info(
+                f"移动目标: 右 ({right_pose[0]:.2f},{right_pose[1]:.2f},{right_pose[2]:.2f}) "
+                f"左 ({left_pose[0]:.2f},{left_pose[1]:.2f},{left_pose[2]:.2f})"
+            )
 
 def main():
     parser = argparse.ArgumentParser(
-        description="发布左右臂随机目标位姿 Marker（RViz 可视化，无重力，每 6 秒更新）"
+        description="发布左右臂移动目标位姿（与 reach_env_cfg DynamicSweepPoseCommand 一致），RViz Marker 可视化"
     )
-    parser.add_argument("--interval", type=float, default=7.0, help="随机更新间隔（秒）")
+    parser.add_argument("--update-hz", type=float, default=50.0, help="目标状态更新频率 (Hz)")
     parser.add_argument("--seed", type=int, default=None, help="随机种子")
-    parser.add_argument("--ee-hz", type=float, default=10.0, help="末端 link7 关键点发布频率 (Hz)")
-    # 使用 parse_known_args() 忽略 ROS 2 标准参数（--ros-args, -r, --params-file 等）
-    args, unknown = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     rclpy.init()
-    node = ReachTargetMarkerNode(interval=args.interval, seed=args.seed, ee_publish_hz=args.ee_hz)
+    node = ReachTargetMarkerNode(update_hz=args.update_hz, seed=args.seed)
     print("=" * 60)
-    print("reach 目标位姿 Marker 节点已启动")
+    print("reach 移动目标节点已启动（与 reach_env_cfg.py DynamicSweepPoseCommand 一致）")
     print("  Topic: /reach_target_markers (MarkerArray)")
     print("  Topic: /reach_targets (PoseArray)")
-    print(f"  更新间隔: {args.interval}s")
-    print("  RViz: Add -> MarkerArray -> Topic: /reach_target_markers")
-    print("        Fixed Frame: world")
-    print("  红球=右臂目标, 蓝球=左臂目标")
-    print("  橙球=目标关键点, 深橙=右 link7 关键点, 浅蓝=左 link7 关键点")
+    print(f"  更新频率: {args.update_hz} Hz")
+    print("  左臂: Y 从 -0.05 → -0.4，到达后 rest 再等待 0.5~2s 后新目标")
+    print("  右臂: Y 从 0.4 → 0.05，同上")
+    print("  RViz: Add -> MarkerArray -> Topic: /reach_target_markers, Fixed Frame: world")
     print("=" * 60)
     try:
         rclpy.spin(node)
